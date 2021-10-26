@@ -445,37 +445,65 @@ class ApplicationController < ActionController::Base
   end
 
   def handle_theme
+    @monkey_req_id = Time.now.to_f.to_s[6..14]
+    @monkey_hostname = Socket.gethostname
+    @monkey_pid = Process.pid
+
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 00")
+    Rails.logger.info(">>> [#{@monkey_req_id}] host: #{@monkey_hostname} pid: #{@monkey_pid}")
+
     return if request.format == "js"
+
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 10")
 
     resolve_safe_mode
     return if request.env[NO_CUSTOM]
+
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 20")
 
     theme_id = nil
 
     if (preview_theme_id = request[:preview_theme_id]&.to_i) &&
       guardian.allow_themes?([preview_theme_id], include_preview: true)
 
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 20.10 - preview_theme_id: #{preview_theme_id}")
+
       theme_id = preview_theme_id
     end
 
     user_option = current_user&.user_option
 
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 30 - theme_id: #{theme_id}")
+
     if theme_id.blank?
       ids, seq = cookies[:theme_ids]&.split("|")
+
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 30.10 - ids: #{ids} seq: #{seq}")
+
       id = ids&.split(",")&.map(&:to_i)&.first
       if id.present? && seq && seq.to_i == user_option&.theme_key_seq.to_i
         theme_id = id if guardian.allow_themes?([id])
       end
     end
 
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 40 - theme_id: #{theme_id}")
+
     if theme_id.blank?
       ids = user_option&.theme_ids || []
+
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 40.10 - ids: #{ids}")
+
       theme_id = ids.first if guardian.allow_themes?(ids)
     end
 
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 50 - theme_id: #{theme_id} - default_theme_id: #{SiteSetting.default_theme_id}")
+
     if theme_id.blank? && SiteSetting.default_theme_id != -1 && guardian.allow_themes?([SiteSetting.default_theme_id])
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 50.10")
       theme_id = SiteSetting.default_theme_id
     end
+
+    Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched handle_theme 60 - theme_id: #{theme_id}")
 
     @theme_id = request.env[:resolved_theme_id] = theme_id
   end

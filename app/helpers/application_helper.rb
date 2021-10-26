@@ -451,8 +451,10 @@ module ApplicationHelper
 
   def theme_id
     if customization_disabled?
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched theme_id customization_disabled")
       nil
     else
+      Rails.logger.info(">>> [#{@monkey_req_id}] monkey patched theme_id resolved_theme_id #{request.env[:resolved_theme_id]}")
       request.env[:resolved_theme_id]
     end
   end
