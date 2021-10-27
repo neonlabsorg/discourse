@@ -1,10 +1,11 @@
 import Site from "discourse/models/site";
+import { bind } from "discourse-common/utils/decorators";
 import { schedule } from "@ember/runloop";
 import { addWidgetCleanCallback } from "discourse/components/mount-widget";
 
 export default class StickyAvatars {
-  sticky_class = "sticky-avatar";
-  topic_post_selector = "#topic .post-stream .topic-post";
+  stickyClass = "sticky-avatar";
+  topicPostSelector = "#topic .post-stream .topic-post";
   intersectionObserver = null;
   direction = "⬇️";
   prevOffset = -1;
@@ -25,7 +26,8 @@ export default class StickyAvatars {
     addWidgetCleanCallback("post-stream", this._clearIntersectionObserver);
   }
 
-  _handleScroll = (offset) => {
+  @bind
+  _handleScroll(offset) {
     if (offset >= this.prevOffset) {
       this.direction = "⬇️";
     } else {
@@ -37,10 +39,10 @@ export default class StickyAvatars {
       this.direction = "⬇️";
 
       document
-        .querySelectorAll(`${this.topic_post_selector}.${this.sticky_class}`)
-        .forEach((node) => node.classList.remove(this.sticky_class));
+        .querySelectorAll(`${this.topicPostSelector}.${this.stickyClass}`)
+        .forEach((node) => node.classList.remove(this.stickyClass));
     }
-  };
+  }
 
   _applyMarginOnOp(op) {
     const topicAvatarNode = op.querySelector(".topic-avatar");
@@ -60,29 +62,29 @@ export default class StickyAvatars {
     topicAvatarNode.style.marginBottom = null;
   }
 
-  _handlePostNodes = () => {
+  @bind
+  _handlePostNodes() {
     this._clearIntersectionObserver();
 
     schedule("afterRender", () => {
       this._initIntersectionObserver();
 
-      document
-        .querySelectorAll(this.topic_post_selector)
-        .forEach((postNode) => {
-          this._applyMarginOnOp(postNode);
-          this.intersectionObserver.observe(postNode);
-        });
+      document.querySelectorAll(this.topicPostSelector).forEach((postNode) => {
+        this._applyMarginOnOp(postNode);
+        this.intersectionObserver.observe(postNode);
+      });
     });
-  };
+  }
 
-  _initIntersectionObserver = () => {
+  @bind
+  _initIntersectionObserver() {
     const headerHeight = document.querySelector(".d-header")?.clientHeight || 0;
 
     this.intersectionObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting || entry.intersectionRatio === 1) {
-            entry.target.classList.remove(this.sticky_class);
+            entry.target.classList.remove(this.stickyClass);
             return;
           }
 
@@ -92,16 +94,17 @@ export default class StickyAvatars {
             this.direction === "⬆️" ||
             postContentHeight > window.innerHeight - headerHeight
           ) {
-            entry.target.classList.add(this.sticky_class);
+            entry.target.classList.add(this.stickyClass);
           }
         });
       },
       { threshold: [0.0, 1.0], rootMargin: `-${headerHeight}px 0px 0px 0px` }
     );
-  };
+  }
 
-  _clearIntersectionObserver = () => {
+  @bind
+  _clearIntersectionObserver() {
     this.intersectionObserver?.disconnect();
     this.intersectionObserver = null;
-  };
+  }
 }
