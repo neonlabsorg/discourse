@@ -120,7 +120,8 @@
     color: var(--primary);
     &:hover,
     &:focus {
-      background-color: var(--highlight-medium);
+      background-color: var(--tertiary);
+      color: var(--secondary);
       outline: none;
     }
 
